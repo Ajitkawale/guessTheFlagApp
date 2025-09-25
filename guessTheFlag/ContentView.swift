@@ -13,11 +13,12 @@ struct ContentView: View {
     @State private var correctAnswer = Int.random(in: 0...2)
     @State private var scoreTitle=""
     @State private var showingScore = false
+    @State private var showingFinalScore = false
     @State private var score: Int = 0
     @State private var questionCount: Int = 0
     
     var body: some View {
-        ZStack{
+         ZStack{
             LinearGradient(colors: [.blue, .black] , startPoint: .top, endPoint: .bottom)
                 .ignoresSafeArea()
             VStack{
@@ -29,7 +30,9 @@ struct ContentView: View {
                 VStack (spacing: 30) {
                     
                     VStack{
-                        Text("Question: \(questionCount + 1)")
+                        if questionCount < 10 {
+                            Text("Question: \(questionCount + 1)")
+                        }
                         Text("Tap the flag of")
                             .foregroundStyle(.secondary)
                             .font(.subheadline.weight(.heavy))
@@ -67,29 +70,60 @@ struct ContentView: View {
             }
             .alert(scoreTitle,isPresented: $showingScore) {
                 Button("Continue", action: askQuestion)
-                
-            }
+                }
+        
             message:{Text("Your score is \(score) ")
             }
-        }
+            .alert("Game Over", isPresented: $showingFinalScore) {
+                Button("Play Again",role: .cancel, action: resetGame)
+                    Button("Quit",  role: .destructive,) {
+                        quitApp()
+                    }
+                   } message: {
+                       Text("Your final score is \(score) out of 10.")
+                   }
+               }
+        
     
-        func flagTapped(_ number: Int){
-            questionCount = questionCount + 1
+    func flagTapped(_ number: Int){
+       
+        
+        
+        if number == correctAnswer{
+            scoreTitle = "Correct"
+            score = score + 1
             
-            
-            if number == correctAnswer{
-                scoreTitle = "Correct"
-                score = score + 1
-            }else{
-                scoreTitle = "Wrong! That's the flag of \(countries[number])"
-            }
-            showingScore = true
+        }else{
+            scoreTitle = "Wrong! That's the flag of \(countries[number])"
         }
         
+      
+        
+        
+        
+        if questionCount == 9 {
+            showingFinalScore = true
+        } else {
+            showingScore = true
+        }
+    }
+        
         func askQuestion(){
+            questionCount = questionCount + 1
             countries.shuffle()
             correctAnswer = Int.random(in: 0...2)
         }
+    func resetGame() {
+           score = 0
+           questionCount = 0
+           countries.shuffle()
+           correctAnswer = Int.random(in: 0...2)
+       }
+    func quitApp() {
+        // This will force quit the app (not recommended for production)
+        exit(0)
+    }
+
     }
 
 #Preview {
