@@ -7,6 +7,33 @@
 
 import SwiftUI
 
+//  reusable FlagImage view
+struct FlagImage: View {
+    let country: String
+    
+    var body: some View {
+        Image(country)
+            .clipShape(.capsule)
+            .shadow(radius: 5)
+    }
+}
+
+// custom ViewModifier for titles
+struct TitleStyle: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .font(.largeTitle.bold())
+            .foregroundStyle(.white)
+    }
+}
+
+//Extension for easier use of the modifier
+extension View {
+    func titleStyle() -> some View {
+        self.modifier(TitleStyle())
+    }
+}
+
 struct ContentView: View {
     
     @State private var countries = ["India","France","Estonia","Germany","Ireland","Italy","Nigeria","Poland","Spain","UK","Ukraine","US"].shuffled()
@@ -18,14 +45,15 @@ struct ContentView: View {
     @State private var questionCount: Int = 0
     
     var body: some View {
-         ZStack{
+        ZStack{
             LinearGradient(colors: [.blue, .black] , startPoint: .top, endPoint: .bottom)
                 .ignoresSafeArea()
             VStack{
                 Spacer()
+                
+               
                 Text("Guess the Flag")
-                    .foregroundStyle(.white)
-                    .font(.largeTitle.bold())
+                    .titleStyle()        // the custom titleStyle modifier
                 
                 VStack (spacing: 30) {
                     
@@ -45,11 +73,9 @@ struct ContentView: View {
                         Button {
                             flagTapped(number)
                             
-                        }
-                        label: {
-                            Image(countries[number])
-                                .clipShape(.capsule)
-                                .shadow(radius: 5)
+                        } label: {
+                            // Use FlagImage instead of raw Image
+                            FlagImage(country: countries[number])
                         }
                     }
                     
@@ -59,7 +85,7 @@ struct ContentView: View {
                 .background(.regularMaterial)
                 .clipShape(.rect(cornerRadius: 20))
                 Spacer()
-               Spacer()
+                Spacer()
                 
                 Text("Score: \(score)")
                     .foregroundStyle(.white)
@@ -67,39 +93,29 @@ struct ContentView: View {
                 Spacer()
             }
             .padding(25)
+        }
+        .alert(scoreTitle,isPresented: $showingScore) {
+            Button("Continue", action: askQuestion)
+        } message: {
+            Text("Your score is \(score) ")
+        }
+        .alert("Game Over", isPresented: $showingFinalScore) {
+            Button("Play Again",role: .cancel, action: resetGame)
+            Button("Quit",  role: .destructive) {
+                quitApp()
             }
-            .alert(scoreTitle,isPresented: $showingScore) {
-                Button("Continue", action: askQuestion)
-                }
-        
-            message:{Text("Your score is \(score) ")
-            }
-            .alert("Game Over", isPresented: $showingFinalScore) {
-                Button("Play Again",role: .cancel, action: resetGame)
-                    Button("Quit",  role: .destructive,) {
-                        quitApp()
-                    }
-                   } message: {
-                       Text("Your final score is \(score) out of 10.")
-                   }
-               }
-        
+        } message: {
+            Text("Your final score is \(score) out of 10.")
+        }
+    }
     
     func flagTapped(_ number: Int){
-       
-        
-        
         if number == correctAnswer{
             scoreTitle = "Correct"
             score = score + 1
-            
-        }else{
+        } else {
             scoreTitle = "Wrong! That's the flag of \(countries[number])"
         }
-        
-      
-        
-        
         
         if questionCount == 9 {
             showingFinalScore = true
@@ -107,24 +123,25 @@ struct ContentView: View {
             showingScore = true
         }
     }
-        
-        func askQuestion(){
-            questionCount = questionCount + 1
-            countries.shuffle()
-            correctAnswer = Int.random(in: 0...2)
-        }
+    
+    func askQuestion(){
+        questionCount = questionCount + 1
+        countries.shuffle()
+        correctAnswer = Int.random(in: 0...2)
+    }
+    
     func resetGame() {
-           score = 0
-           questionCount = 0
-           countries.shuffle()
-           correctAnswer = Int.random(in: 0...2)
-       }
+        score = 0
+        questionCount = 0
+        countries.shuffle()
+        correctAnswer = Int.random(in: 0...2)
+    }
+    
     func quitApp() {
         // This will force quit the app (not recommended for production)
         exit(0)
     }
-
-    }
+}
 
 #Preview {
     ContentView()
